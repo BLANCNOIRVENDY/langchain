@@ -27,10 +27,9 @@ class ConversationBufferWindowMemory(BaseChatMemory, BaseModel):
         :meta private:
         """
         return [self.memory_key]
-
+    
     def load_memory_variables(self, inputs: Dict[str, Any]) -> Dict[str, str]:
         """Return history buffer."""
-
         if self.return_messages:
             buffer: Any = self.buffer[-self.k * 2 :]
         else:
