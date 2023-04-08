@@ -14,6 +14,7 @@ class ConversationBufferWindowMemory(BaseChatMemory, BaseModel):
     ai_prefix: str = "AI"
     memory_key: str = "history"  #: :meta private:
     k: int = 5
+    max_buffer_size: int = None
 
     @property
     def buffer(self) -> List[BaseMessage]:

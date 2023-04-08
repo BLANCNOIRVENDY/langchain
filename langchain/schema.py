@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, NamedTuple, Optional
 
 from pydantic import BaseModel, Extra, Field, root_validator
+BUFFER_STRINGIFY_FMT = '{role}: {content}'
 
 
 def get_buffer_string(
@@ -64,6 +65,12 @@ class BaseMessage(BaseModel):
     @abstractmethod
     def type(self) -> str:
         """Type of the message, used for serialization."""
+    
+    
+    def limit(self, size_limit:int):
+        stringified = get_buffer_string([self])
+        prefix_size = len(stringified) - len(self.content)
+        self.content = self.content[:(size_limit - prefix_size)]
 
 
 class HumanMessage(BaseMessage):
