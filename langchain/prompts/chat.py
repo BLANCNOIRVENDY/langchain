@@ -120,7 +120,20 @@ class ChatPromptValue(PromptValue):
         return self.messages
 
 
-class ChatPromptTemplate(BasePromptTemplate, ABC):
+class BaseChatPromptTemplate(BasePromptTemplate, ABC):
+    def format(self, **kwargs: Any) -> str:
+        return self.format_prompt(**kwargs).to_string()
+
+    def format_prompt(self, **kwargs: Any) -> PromptValue:
+        messages = self.format_messages(**kwargs)
+        return ChatPromptValue(messages=messages)
+
+    @abstractmethod
+    def format_messages(self, **kwargs: Any) -> List[BaseMessage]:
+        """Format kwargs into a list of messages."""
+
+
+class ChatPromptTemplate(BaseChatPromptTemplate, ABC):
     input_variables: List[str]
     messages: List[Union[BaseMessagePromptTemplate, BaseMessage]]
 
@@ -159,7 +172,7 @@ class ChatPromptTemplate(BasePromptTemplate, ABC):
     def format(self, **kwargs: Any) -> str:
         return self.format_prompt(**kwargs).to_string()
 
-    def format_prompt(self, **kwargs: Any) -> PromptValue:
+    def format_messages(self, **kwargs: Any) -> List[BaseMessage]:
         kwargs = self._merge_partial_and_user_variables(**kwargs)
         result = []
         for message_template in self.messages:
@@ -175,7 +188,7 @@ class ChatPromptTemplate(BasePromptTemplate, ABC):
                 result.extend(message)
             else:
                 raise ValueError(f"Unexpected input: {message_template}")
-        return ChatPromptValue(messages=result)
+        return result
 
     def partial(self, **kwargs: Union[str, Callable[[], str]]) -> BasePromptTemplate:
         raise NotImplementedError

@@ -17,7 +17,10 @@ from langchain.document_loaders.csv_loader import CSVLoader
 from langchain.document_loaders.dataframe import DataFrameLoader
 from langchain.document_loaders.directory import DirectoryLoader
 from langchain.document_loaders.duckdb_loader import DuckDBLoader
-from langchain.document_loaders.email import UnstructuredEmailLoader
+from langchain.document_loaders.email import (
+    OutlookMessageLoader,
+    UnstructuredEmailLoader,
+)
 from langchain.document_loaders.epub import UnstructuredEPubLoader
 from langchain.document_loaders.evernote import EverNoteLoader
 from langchain.document_loaders.facebook_chat import FacebookChatLoader
@@ -58,6 +61,7 @@ from langchain.document_loaders.unstructured import (
     UnstructuredFileLoader,
 )
 from langchain.document_loaders.url import UnstructuredURLLoader
+from langchain.document_loaders.url_selenium import SeleniumURLLoader
 from langchain.document_loaders.web_base import WebBaseLoader
 from langchain.document_loaders.whatsapp_chat import WhatsAppChatLoader
 from langchain.document_loaders.word_document import UnstructuredWordDocumentLoader
@@ -74,6 +78,7 @@ __all__ = [
     "UnstructuredFileLoader",
     "UnstructuredFileIOLoader",
     "UnstructuredURLLoader",
+    "SeleniumURLLoader",
     "DirectoryLoader",
     "NotionDirectoryLoader",
     "NotionDBLoader",
@@ -87,6 +92,7 @@ __all__ = [
     "UnstructuredImageLoader",
     "ObsidianLoader",
     "UnstructuredEmailLoader",
+    "OutlookMessageLoader",
     "UnstructuredEPubLoader",
     "UnstructuredMarkdownLoader",
     "RoamLoader",

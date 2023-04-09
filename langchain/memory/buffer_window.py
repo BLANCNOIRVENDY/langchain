@@ -1,13 +1,11 @@
 from typing import Any, Dict, List, Callable
 
-from pydantic import BaseModel
-
 from langchain.memory.chat_memory import BaseChatMemory
 from langchain.schema import BaseMessage, get_buffer_string
 
 
 
-class ConversationBufferWindowMemory(BaseChatMemory, BaseModel):
+class ConversationBufferWindowMemory(BaseChatMemory):
     """Buffer for storing conversation memory."""
     overflow_handler: Callable = None
     human_prefix: str = "Human"
