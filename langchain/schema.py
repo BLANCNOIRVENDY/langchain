@@ -2,11 +2,19 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, NamedTuple, Optional
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 from pydantic import BaseModel, Extra, Field, root_validator
 BUFFER_STRINGIFY_FMT = '{role}: {content}'
 
+
+def truncate_after_delim(value:str, delim:str) -> Tuple[str,bool]:
+    if delim is None:
+        raise ValueError(f"delim should not be {delim}")
+    last_index = value.rfind(delim)
+    if last_index != -1:
+        return (value[:last_index + 1], True)
+    return (value, False)
 
 def get_buffer_string(
     messages: List[BaseMessage], human_prefix: str = "Human", ai_prefix: str = "AI"
@@ -67,10 +75,35 @@ class BaseMessage(BaseModel):
         """Type of the message, used for serialization."""
     
     
-    def limit(self, size_limit:int):
+    def limit(self, size_limit:int, delim:str=None) -> Optional[BaseMessage]:
+        """
+        Limits the size of the message content by cutting it off at a specified size limit.
+        If a delimiter is specified, truncates the message content after the last occurrence of the delimiter.
+
+        Args:
+            size_limit (int): The maximum size of message content.
+            delim (str, optional): The delimiter to be used when truncating the message content. Default value is None.
+        """
+        content = self.content
         stringified = get_buffer_string([self])
-        prefix_size = len(stringified) - len(self.content)
-        self.content = self.content[:(size_limit - prefix_size)]
+        prefix_size = len(stringified) - len(content)
+        content_size = size_limit - prefix_size
+        if content_size >= len(content):
+            return self
+        print(content_size)
+        clone = self.copy()
+        clone.content = content[:content_size]
+        if delim is not None:
+            trimmed, success = truncate_after_delim(clone.content, delim=delim)
+            if not success:
+                return None
+            else:
+                clone.content = trimmed
+        return clone
+
+                
+            
+           
 
 
 class HumanMessage(BaseMessage):
