@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Awaitable, Coroutine
 
 from pydantic import BaseModel, Extra, Field, root_validator
 BUFFER_STRINGIFY_FMT = '{role}: {content}'
@@ -329,6 +329,53 @@ class BaseChatMessageHistory(ABC):
     @abstractmethod
     def clear(self) -> None:
         """Remove all messages from the store"""
+        
+class BaseMessageHistoryBackend(ABC):
+    
+    @abstractmethod
+    def retrieve_history(self, n_history:int) -> Awaitable[List[BaseMessage]]:
+        """_summary_
+
+        Args:
+            n_history (int): _description_
+
+        Raises:
+            NotImplementedError: _description_
+            NotImplementedError: _description_
+            to: _description_
+
+        Returns:
+            Awaitable[List[BaseMessage]]: _description_
+        """
+    
+    @abstractmethod
+    def push_history(self, messages: List[BaseMessage]) -> Coroutine:
+        """_summary_
+
+        Args:
+            messages (List[BaseMessage]): _description_
+
+        Raises:
+            NotImplementedError: _description_
+            NotImplementedError: _description_
+            to: _description_
+
+        Returns:
+            Coroutine: _description_
+        """
+    
+    @abstractmethod
+    def close(self):
+        """_summary_
+
+        Raises:
+            NotImplementedError: _description_
+            NotImplementedError: _description_
+            to: _description_
+
+        Returns:
+            _type_: _description_
+        """
 
 
 class Document(BaseModel):
