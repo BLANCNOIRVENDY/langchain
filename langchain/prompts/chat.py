@@ -199,37 +199,40 @@ class ChatPromptTemplate(BaseChatPromptTemplate, ABC):
     def save(self, file_path: Union[Path, str]) -> None:
         raise NotImplementedError
 
-def calculate_unweighted_message_length(
+def calculate_message_length(
         messages:List[Tuple[Union[BaseMessage, BaseMessagePromptTemplate], Any]],
-        **kwargs) -> int:
-    """Calculates the total length of messages without a weight.
+        **kwargs) -> Tuple[int,int]:
+    """Calculates the total length of messages.
+    Calculates the length of messages with a weight of None and messages with a weight.
     Args:
         messages (List[Tuple[Union[BaseMessage, BaseMessagePromptTemplate], Any]]): A list of (message, weight) tuples. Message can be BaseMessage or BaseMessagePromptTemplate.
         **kwargs: Keyword arguments to pass to message formatting.
     Returns:
+        Tuple[int, int]: 
         int: The total length of messages with a weight of None.
+        int: The total length of messages with a weight.
     """
-    size = 0
-    for message, weight in messages: 
-        if weight is not None: 
-            # Skip this message since it has a defined weight.
-            continue  
-        if isinstance(message, BaseMessage): 
+    unweighted_size = 0
+    weighted_size = 0
+    for message, weight in messages:
+        if isinstance(message, BaseMessage):
             # Get the message as a string using get_buffer_string.
             msg = get_buffer_string([message])
             # Add the length of the message to the total size.
+            size = unweighted_size if weight is None else weighted_size  
             size += len(msg) 
-        elif isinstance(message, BaseMessagePromptTemplate): 
+        elif isinstance(message, BaseMessagePromptTemplate):
             # Get only the keyword arguments that are input variables for the template.
             rel_kwargs = {k:v for k,v in kwargs.items() if k in message.input_variables}
             # Format the template messages and get as a string.
-            msg = get_buffer_string(message.format_messages(**rel_kwargs)) 
+            msg = get_buffer_string(message.format_messages(**rel_kwargs))
             # Add the length to the total size.
+            size = unweighted_size if weight is None else weighted_size  
             size += len(msg) 
-        else: 
+        else:
             # Invalid message type. Raise an error.
             raise ValueError(f"Unexpected input: {message}")
-    return size
+    return unweighted_size, weighted_size 
 
 
 def get_size_capped_message(message: Union[BaseMessage, BaseMessagePromptTemplate], size_cap:int=None, delim:str=None, **kwargs) -> List[BaseMessage]:
@@ -315,15 +318,21 @@ class SizedChatPromptTemplate(BasePromptTemplate, ABC):
     
     def format_prompt(self, **kwargs: Any) -> PromptValue:
         kwargs = self._merge_partial_and_user_variables(**kwargs)
-        unweighted_size = calculate_unweighted_message_length(self.messages, **kwargs)
-        dyn_size = self.size_cap - unweighted_size - 1
+        unweighted_size, weighted_size = calculate_message_length(self.messages, **kwargs)
         messages = []
-        for message, weight in self.messages:
-            if weight is None:
-                messages += get_size_capped_message(message=message, size_cap=None, delim=self.delim, **kwargs)
-            else:
-                target_size = int(dyn_size * (weight / self.w_sum)) - 1
-                messages += get_size_capped_message(message=message, size_cap=target_size, delim=self.delim, **kwargs)
-        return ChatPromptValue(messages=messages)
+        if self.size_cap > (unweighted_size + weighted_size):
+            for m, _ in self.messages:
+                messages += get_size_capped_message(message=m, size_cap=None, delim=self.delim, **kwargs)
+        else:
+            dyn_size = self.size_cap - unweighted_size - 1
+            for message, weight in self.messages:
+                if weight is None:
+                    messages += get_size_capped_message(message=message, size_cap=None, delim=self.delim, **kwargs)
+                else:
+                    target_size = int(dyn_size * (weight / self.w_sum)) - 1
+                    messages += get_size_capped_message(message=message, size_cap=target_size, delim=self.delim, **kwargs)
+        prompt =  ChatPromptValue(messages=messages)
+        print(f'sized prompt = {prompt.to_string()}')
+        return prompt
         
         
