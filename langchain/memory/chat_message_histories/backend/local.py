@@ -16,8 +16,6 @@ from langchain.schema import (
     BaseMessage
 )
 
-
-
 MESSAGE_CLS_MAP = {
     'ai': AIMessage,
     'human': HumanMessage, 
@@ -58,18 +56,15 @@ class FileBackend(BaseMessageHistoryBackend):
                     return []
             return [from_dict_to_base_message(log) for log in data['history'][-n_history:]]
         except Exception as e:
-            print(e)
             return []
     
     def close(self):
-        print('close')
         self._periodic_saver_shutdown = True
         if self.write_buffer:
             self._save_and_clear_buffer()
 
     # Append new messages to history
     async def push_history(self, messages: List[BaseMessage]):
-        print(f'push {messages}')
         self.write_buffer += messages
         if len(self.write_buffer) > self.buffer_size:
             self._save_and_clear_buffer()
@@ -81,7 +76,6 @@ class FileBackend(BaseMessageHistoryBackend):
                 self._save_and_clear_buffer()
         
     def _save_and_clear_buffer(self):
-        print(f'save and clear buffer {self.write_buffer}')
         
         if not path.exists(self.path):
             with open(self.path, 'w') as fp:

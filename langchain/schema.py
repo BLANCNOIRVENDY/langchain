@@ -333,7 +333,7 @@ class BaseChatMessageHistory(ABC):
 class BaseMessageHistoryBackend(ABC):
     
     @abstractmethod
-    def retrieve_history(self, n_history:int) -> Awaitable[List[BaseMessage]]:
+    async def retrieve_history(self, n_history:int) -> List[BaseMessage]:
         """_summary_
 
         Args:
@@ -349,7 +349,7 @@ class BaseMessageHistoryBackend(ABC):
         """
     
     @abstractmethod
-    def push_history(self, messages: List[BaseMessage]) -> Coroutine:
+    async def push_history(self, messages: List[BaseMessage]):
         """_summary_
 
         Args:
@@ -479,3 +479,21 @@ class OutputParserException(Exception):
     """
 
     pass
+
+class BasePublisher(ABC):
+    
+    @abstractmethod
+    def publish(self, docs: List[Document]):
+        """_summary_
+
+        Args:
+            docs (List[Document]): _description_
+        """
+    
+    @abstractmethod
+    async def apublish(self,docs:List[Document]):
+        """_summary_
+
+        Args:
+            docs (List[Document]): _description_
+        """

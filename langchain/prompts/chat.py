@@ -331,7 +331,7 @@ class SizedChatPromptTemplate(BasePromptTemplate, ABC):
                 else:
                     target_size = int(dyn_size * (weight / self.w_sum)) - 1
                     messages += get_size_capped_message(message=message, size_cap=target_size, delim=self.delim, **kwargs)
-        prompt =  ChatPromptValue(messages=messages)
-        return prompt
+        
+        return ChatPromptValue(messages=messages)
         
         
