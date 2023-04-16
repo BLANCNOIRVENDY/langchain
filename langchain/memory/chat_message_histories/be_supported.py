@@ -1,7 +1,7 @@
 from typing import List
 
 import asyncio
-from asyncio import Task, BaseEventLoop
+from concurrent.futures import ThreadPoolExecutor
 
 from langchain.schema import (
     AIMessage,
@@ -17,7 +17,7 @@ class BackendSupportedMessageHistory(BaseChatMessageHistory):
     def from_backend(cls,backend: BaseMessageHistoryBackend, n_pair_history:int=5) -> BaseChatMessageHistory:
         loop = asyncio.new_event_loop()
         messages = loop.run_until_complete(backend.retrieve_history(n_history=n_pair_history * 2))
-        print(messages)
+        loop.close()
         return cls(messages=messages, backend=backend, n_pair_history=n_pair_history)
         
     
@@ -26,18 +26,15 @@ class BackendSupportedMessageHistory(BaseChatMessageHistory):
         self.n_pair_history = n_pair_history
         self.backend = backend
         self.messages = messages
-        self.loop: BaseEventLoop = asyncio.new_event_loop()
         
-    def _load_history(self, task: Task):
-        self.messages = task.result() + self.messages
-    
     def add_ai_message(self, message: str) -> None:
         self.messages.append(AIMessage(content=message))
         n_history = self.n_pair_history * 2
-        print(len(self.messages))
         if len(self.messages) > self.n_pair_history * 2:
             self.messages, old = self.messages[-n_history:], self.messages[:-n_history]
-            asyncio.run(self.backend.push_history(old))
+            loop = asyncio.new_event_loop()
+            loop.run_until_complete(self.backend.push_history(old))
+            loop.close()
     
     def add_user_message(self, message: str) -> None:
         self.messages.append(HumanMessage(content=message))
@@ -47,4 +44,3 @@ class BackendSupportedMessageHistory(BaseChatMessageHistory):
 
     def __del__(self):
         self.backend.close()
-        self.loop.close()

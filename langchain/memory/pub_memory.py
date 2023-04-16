@@ -8,6 +8,7 @@ from typing import (
 from pydantic import Field
 from langchain.schema import BaseMemory, BasePublisher, BaseMessage, Document
 from langchain.prompts.chat import HumanMessage, AIMessage, get_buffer_string
+import threading
 import asyncio
 
 class ChatPairWithMeta:
@@ -26,7 +27,7 @@ class ChatPairWithMeta:
 
 class ConversationalWindowPublisherMemory(BaseMemory):
     
-    publisher: BasePublisher = Field(exclude=True)
+    publishers: List[BasePublisher] = Field(exclude=True)
     buffer_size: int = 10
     message_pairs: List[ChatPairWithMeta] = []
     memory_key: str
@@ -59,10 +60,13 @@ class ConversationalWindowPublisherMemory(BaseMemory):
         self.message_pairs.append(ChatPairWithMeta((HumanMessage(content=input), AIMessage(content=output)),**meta))
         if self.message_pairs and (len(self.message_pairs) > self.buffer_size):
             old, self.message_pairs = self.message_pairs[:self.buffer_size], self.message_pairs[self.buffer_size:]
-            asyncio.Task(self._publish(old))
+            loop = asyncio.new_event_loop()
+            gather = asyncio.gather(*[self._publish(pub, old) for pub in self.publishers], loop=loop)
+            loop.run_until_complete(gather)
+            loop.close()
             
-    async def _publish(self, docs:List[ChatPairWithMeta]):
-        self.publisher.publish([o.to_document() for o in docs])
+    async def _publish(self, publisher:BasePublisher, docs:List[ChatPairWithMeta]):
+        publisher.publish([o.to_document() for o in docs])
     
     def clear(self) -> None:
         return self.messages.clear()
