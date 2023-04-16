@@ -59,7 +59,10 @@ class ConversationalWindowPublisherMemory(BaseMemory):
         self.message_pairs.append(ChatPairWithMeta((HumanMessage(content=input), AIMessage(content=output)),**meta))
         if self.message_pairs and (len(self.message_pairs) > self.buffer_size):
             old, self.message_pairs = self.message_pairs[:self.buffer_size], self.message_pairs[self.buffer_size:]
-            asyncio.run(self.publisher.apublish([o.to_document() for o in old]))
+            asyncio.Task(self._publish(old))
+            
+    async def _publish(self, docs:List[ChatPairWithMeta]):
+        self.publisher.publish([o.to_document() for o in docs])
     
     def clear(self) -> None:
         return self.messages.clear()

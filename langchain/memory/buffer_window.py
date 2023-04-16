@@ -7,7 +7,6 @@ from langchain.schema import BaseMessage, get_buffer_string
 
 class ConversationBufferWindowMemory(BaseChatMemory):
     """Buffer for storing conversation memory."""
-    overflow_handler: Callable = None
     human_prefix: str = "Human"
     ai_prefix: str = "AI"
     memory_key: str = "history"  #: :meta private:

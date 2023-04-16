@@ -219,19 +219,19 @@ def calculate_message_length(
             # Get the message as a string using get_buffer_string.
             msg = get_buffer_string([message])
             # Add the length of the message to the total size.
-            size = unweighted_size if weight is None else weighted_size  
-            size += len(msg) 
         elif isinstance(message, BaseMessagePromptTemplate):
             # Get only the keyword arguments that are input variables for the template.
             rel_kwargs = {k:v for k,v in kwargs.items() if k in message.input_variables}
             # Format the template messages and get as a string.
             msg = get_buffer_string(message.format_messages(**rel_kwargs))
             # Add the length to the total size.
-            size = unweighted_size if weight is None else weighted_size  
-            size += len(msg) 
         else:
             # Invalid message type. Raise an error.
             raise ValueError(f"Unexpected input: {message}")
+        if weight is None:
+                unweighted_size += len(msg)
+        else:
+            weighted_size += len(msg)
     return unweighted_size, weighted_size 
 
 
