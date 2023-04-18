@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Generic, List, NamedTuple, Optional, TypeVar, Tuple, Awaitable, Coroutine
+from typing import Any, Dict, Generic, List, NamedTuple, Optional, TypeVar, Union, Tuple, Awaitable, Coroutine
 
 from pydantic import BaseModel, Extra, Field, root_validator
 BUFFER_STRINGIFY_FMT = '{role}: {content}'
@@ -40,7 +40,7 @@ class AgentAction(NamedTuple):
     """Agent's action to take."""
 
     tool: str
-    tool_input: str
+    tool_input: Union[str, dict]
     log: str
 
 
