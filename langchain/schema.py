@@ -497,3 +497,17 @@ class BasePublisher(ABC):
         Args:
             docs (List[Document]): _description_
         """
+
+D = TypeVar("D", bound=Document)
+
+
+class BaseDocumentTransformer(ABC, Generic[D]):
+    """Base interface for transforming documents."""
+
+    @abstractmethod
+    def transform_documents(self, documents: List[D], **kwargs: Any) -> List[D]:
+        """Transform a list of documents."""
+
+    @abstractmethod
+    async def atransform_documents(self, documents: List[D], **kwargs: Any) -> List[D]:
+        """Asynchronously transform a list of documents."""
