@@ -1,4 +1,4 @@
-from typing import List, Callable
+from typing import List
 
 from pydantic import BaseModel
 
@@ -8,7 +8,6 @@ from langchain.schema import (
     BaseMessage,
     HumanMessage,
 )
-
 
 class ChatMessageHistory(BaseChatMessageHistory, BaseModel):
     messages: List[BaseMessage] = []

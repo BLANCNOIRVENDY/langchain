@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, Dict, Generic, List, NamedTuple, Optional, TypeVar, Union, Tuple, Awaitable, Coroutine
 
 from pydantic import BaseModel, Extra, Field, root_validator
 BUFFER_STRINGIFY_FMT = '{role}: {content}'
@@ -40,7 +40,7 @@ class AgentAction(NamedTuple):
     """Agent's action to take."""
 
     tool: str
-    tool_input: str
+    tool_input: Union[str, dict]
     log: str
 
 
@@ -234,7 +234,7 @@ class BaseLanguageModel(BaseModel, ABC):
             raise ValueError(
                 "Could not import transformers python package. "
                 "This is needed in order to calculate get_num_tokens. "
-                "Please it install it with `pip install transformers`."
+                "Please install it with `pip install transformers`."
             )
         # create a GPT-3 tokenizer instance
         tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
@@ -329,6 +329,53 @@ class BaseChatMessageHistory(ABC):
     @abstractmethod
     def clear(self) -> None:
         """Remove all messages from the store"""
+        
+class BaseMessageHistoryBackend(ABC):
+    
+    @abstractmethod
+    async def retrieve_history(self, n_history:int) -> List[BaseMessage]:
+        """_summary_
+
+        Args:
+            n_history (int): _description_
+
+        Raises:
+            NotImplementedError: _description_
+            NotImplementedError: _description_
+            to: _description_
+
+        Returns:
+            Awaitable[List[BaseMessage]]: _description_
+        """
+    
+    @abstractmethod
+    async def push_history(self, messages: List[BaseMessage]):
+        """_summary_
+
+        Args:
+            messages (List[BaseMessage]): _description_
+
+        Raises:
+            NotImplementedError: _description_
+            NotImplementedError: _description_
+            to: _description_
+
+        Returns:
+            Coroutine: _description_
+        """
+    
+    @abstractmethod
+    def close(self):
+        """_summary_
+
+        Raises:
+            NotImplementedError: _description_
+            NotImplementedError: _description_
+            to: _description_
+
+        Returns:
+            _type_: _description_
+        """
 
 
 class Document(BaseModel):
@@ -367,15 +414,17 @@ class BaseRetriever(ABC):
 
 Memory = BaseMemory
 
+T = TypeVar("T")
 
-class BaseOutputParser(BaseModel, ABC):
+
+class BaseOutputParser(BaseModel, ABC, Generic[T]):
     """Class to parse the output of an LLM call.
 
     Output parsers help structure language model responses.
     """
 
     @abstractmethod
-    def parse(self, text: str) -> Any:
+    def parse(self, text: str) -> T:
         """Parse the output of an LLM call.
 
         A method which takes in a string (assumed output of language model )
@@ -430,3 +479,35 @@ class OutputParserException(Exception):
     """
 
     pass
+
+class BasePublisher(ABC):
+    
+    @abstractmethod
+    def publish(self, docs: List[Document]):
+        """_summary_
+
+        Args:
+            docs (List[Document]): _description_
+        """
+    
+    @abstractmethod
+    async def apublish(self,docs:List[Document]):
+        """_summary_
+
+        Args:
+            docs (List[Document]): _description_
+        """
+
+D = TypeVar("D", bound=Document)
+
+
+class BaseDocumentTransformer(ABC, Generic[D]):
+    """Base interface for transforming documents."""
+
+    @abstractmethod
+    def transform_documents(self, documents: List[D], **kwargs: Any) -> List[D]:
+        """Transform a list of documents."""
+
+    @abstractmethod
+    async def atransform_documents(self, documents: List[D], **kwargs: Any) -> List[D]:
+        """Asynchronously transform a list of documents."""

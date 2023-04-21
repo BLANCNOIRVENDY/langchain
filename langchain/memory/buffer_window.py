@@ -7,12 +7,10 @@ from langchain.schema import BaseMessage, get_buffer_string
 
 class ConversationBufferWindowMemory(BaseChatMemory):
     """Buffer for storing conversation memory."""
-    overflow_handler: Callable = None
     human_prefix: str = "Human"
     ai_prefix: str = "AI"
     memory_key: str = "history"  #: :meta private:
     k: int = 5
-    max_buffer_size: int = None
 
     @property
     def buffer(self) -> List[BaseMessage]:
@@ -29,15 +27,12 @@ class ConversationBufferWindowMemory(BaseChatMemory):
     
     def load_memory_variables(self, inputs: Dict[str, Any]) -> Dict[str, str]:
         """Return history buffer."""
-        if self.return_messages:
-            buffer: Any = self.buffer[-self.k * 2 :]
-        else:
+
+        buffer: Any = self.buffer[-self.k * 2 :] if self.k > 0 else []
+        if not self.return_messages:
             buffer = get_buffer_string(
-                self.buffer[-self.k * 2 :],
+                buffer,
                 human_prefix=self.human_prefix,
                 ai_prefix=self.ai_prefix,
             )
-        self.chat_memory.messages, ovf = self.buffer[-self.k * 2 :], self.buffer[: -self.k * 2]
-        if self.overflow_handler is not None and len(ovf) != 0:
-            self.overflow_handler(ovf)
         return {self.memory_key: buffer}
