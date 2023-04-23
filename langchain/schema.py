@@ -12,7 +12,7 @@ from typing import (
     Sequence,
     TypeVar,
     Union,
-), Tuple, Awaitable, Coroutine
+    Tuple)
 
 from pydantic import BaseModel, Extra, Field, root_validator
 BUFFER_STRINGIFY_FMT = '{role}: {content}'
