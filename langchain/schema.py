@@ -74,6 +74,20 @@ class BaseMessage(BaseModel):
     @abstractmethod
     def type(self) -> str:
         """Type of the message, used for serialization."""
+    
+    def __str__(self) -> str:
+        return f"{self.type}: {self.content}"
+    
+    def limit(self, size_cap:int, delim:str) -> 'BaseMessage':
+        """ This method limits the message length using the delimiter if it is set."""
+        mlen = len(str(self))
+        if mlen > size_cap:
+            new_content = self.content[:size_cap - mlen]
+            if delim:
+                new_content = new_content[:new_content.rfind(delim)]
+            return self.__class__(content=new_content, additional_kwargs=self.additional_kwargs)
+        else:
+            return self
 
 
 class HumanMessage(BaseMessage):
