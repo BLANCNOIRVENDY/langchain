@@ -84,6 +84,8 @@ class BaseMessage(BaseModel):
     def type(self) -> str:
         """Type of the message, used for serialization."""
     
+    def __str__(self) -> str:
+        return f'{self.type}: {self.content}'
     
     def limit(self, size_limit:int, delim:str=None) -> Optional[BaseMessage]:
         """
