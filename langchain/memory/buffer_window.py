@@ -1,12 +1,12 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Callable
 
 from langchain.memory.chat_memory import BaseChatMemory
 from langchain.schema import BaseMessage, get_buffer_string
 
 
+
 class ConversationBufferWindowMemory(BaseChatMemory):
     """Buffer for storing conversation memory."""
-
     human_prefix: str = "Human"
     ai_prefix: str = "AI"
     memory_key: str = "history"  #: :meta private:
@@ -24,7 +24,7 @@ class ConversationBufferWindowMemory(BaseChatMemory):
         :meta private:
         """
         return [self.memory_key]
-
+    
     def load_memory_variables(self, inputs: Dict[str, Any]) -> Dict[str, str]:
         """Return history buffer."""
 

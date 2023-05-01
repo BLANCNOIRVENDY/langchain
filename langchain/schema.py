@@ -12,10 +12,19 @@ from typing import (
     Sequence,
     TypeVar,
     Union,
-)
+    Tuple)
 
 from pydantic import BaseModel, Extra, Field, root_validator
+BUFFER_STRINGIFY_FMT = '{role}: {content}'
 
+
+def truncate_after_delim(value:str, delim:str) -> Tuple[str,bool]:
+    if delim is None:
+        raise ValueError(f"delim should not be {delim}")
+    last_index = value.rfind(delim)
+    if last_index != -1:
+        return (value[:last_index + 1], True)
+    return (value, False)
 
 def get_buffer_string(
     messages: List[BaseMessage], human_prefix: str = "Human", ai_prefix: str = "AI"
@@ -74,6 +83,39 @@ class BaseMessage(BaseModel):
     @abstractmethod
     def type(self) -> str:
         """Type of the message, used for serialization."""
+    
+    def __str__(self) -> str:
+        return f'{self.type}: {self.content}'
+    
+    def limit(self, size_limit:int, delim:str=None) -> Optional[BaseMessage]:
+        """
+        Limits the size of the message content by cutting it off at a specified size limit.
+        If a delimiter is specified, truncates the message content after the last occurrence of the delimiter.
+
+        Args:
+            size_limit (int): The maximum size of message content.
+            delim (str, optional): The delimiter to be used when truncating the message content. Default value is None.
+        """
+        content = self.content
+        stringified = get_buffer_string([self])
+        prefix_size = len(stringified) - len(content)
+        content_size = size_limit - prefix_size
+        if content_size >= len(content):
+            return self
+        print(content_size)
+        clone = self.copy()
+        clone.content = content[:content_size]
+        if delim is not None:
+            trimmed, success = truncate_after_delim(clone.content, delim=delim)
+            if not success:
+                return None
+            else:
+                clone.content = trimmed
+        return clone
+
+                
+            
+           
 
 
 class HumanMessage(BaseMessage):
@@ -264,6 +306,53 @@ class BaseChatMessageHistory(ABC):
     @abstractmethod
     def clear(self) -> None:
         """Remove all messages from the store"""
+        
+class BaseMessageHistoryBackend(ABC):
+    
+    @abstractmethod
+    async def retrieve_history(self, n_history:int) -> List[BaseMessage]:
+        """_summary_
+
+        Args:
+            n_history (int): _description_
+
+        Raises:
+            NotImplementedError: _description_
+            NotImplementedError: _description_
+            to: _description_
+
+        Returns:
+            Awaitable[List[BaseMessage]]: _description_
+        """
+    
+    @abstractmethod
+    async def push_history(self, messages: List[BaseMessage]):
+        """_summary_
+
+        Args:
+            messages (List[BaseMessage]): _description_
+
+        Raises:
+            NotImplementedError: _description_
+            NotImplementedError: _description_
+            to: _description_
+
+        Returns:
+            Coroutine: _description_
+        """
+    
+    @abstractmethod
+    def close(self):
+        """_summary_
+
+        Raises:
+            NotImplementedError: _description_
+            NotImplementedError: _description_
+            to: _description_
+
+        Returns:
+            _type_: _description_
+        """
 
 
 class Document(BaseModel):
@@ -368,6 +457,23 @@ class OutputParserException(Exception):
 
     pass
 
+class BasePublisher(ABC):
+    
+    @abstractmethod
+    def publish(self, docs: List[Document]):
+        """_summary_
+
+        Args:
+            docs (List[Document]): _description_
+        """
+    
+    @abstractmethod
+    async def apublish(self,docs:List[Document]):
+        """_summary_
+
+        Args:
+            docs (List[Document]): _description_
+        """
 
 class BaseDocumentTransformer(ABC):
     """Base interface for transforming documents."""

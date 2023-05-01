@@ -1,16 +1,19 @@
 from typing import List
 
 from langchain.prompts import PromptTemplate
+from langchain.memory.chat_memory import ChatMessageHistory
 from langchain.prompts.chat import (
     AIMessagePromptTemplate,
     BaseMessagePromptTemplate,
     ChatMessagePromptTemplate,
+    SizedChatPromptTemplate,
     ChatPromptTemplate,
     ChatPromptValue,
     HumanMessagePromptTemplate,
     SystemMessagePromptTemplate,
+    MessagesPlaceholder
 )
-from langchain.schema import HumanMessage
+from langchain.schema import HumanMessage, SystemMessage
 
 
 def create_messages() -> List[BaseMessagePromptTemplate]:
@@ -102,3 +105,33 @@ def test_chat_prompt_template_with_messages() -> None:
     )
     prompt_value_messages = prompt_value.to_messages()
     assert prompt_value_messages[-1] == HumanMessage(content="foo")
+
+def test_capped_size_prompt_template_with_messages() -> None:
+    SYSTEM_RULE = """You are helpful and intelligent being that help humans to solve their problems. the qualities of top priority you should follow are 
+    - Accuracy
+    - Adaptability
+    - Helpful
+    - Reliability
+    - Harmlessness
+    - Honesty
+    """
+
+    USER_MESSAGE = "Who is sakamoto ryuichi?"
+    BOT_MESSAGE = """
+    Ryuichi Sakamoto is a Japanese musician, composer, and actor. He was born on January 17, 1952, in Tokyo, Japan. Sakamoto began his career as a member of the electronic music group Yellow Magic Orchestra in the late 1970s. He is known for his innovative music compositions that blend electronic sounds with traditional Japanese music, as well as his contributions to the film industry as a film composer. Some of Sakamoto's notable works include the scores for the movies "The Last Emperor," "Merry Christmas, Mr. Lawrence," and "The Revenant." Sakamoto has won numerous awards for his work over the years, including an Academy Award, two Golden Globe Awards, a Grammy Award, and a BAFTA Award.
+    """
+
+
+    history = ChatMessageHistory()
+    for _ in range(10):
+        history.add_user_message(USER_MESSAGE)
+        history.add_ai_message(BOT_MESSAGE)
+        
+    capped_chat_prompt = SizedChatPromptTemplate.from_messages([
+        SystemMessage(content=SYSTEM_RULE),
+        MessagesPlaceholder(variable_name='history'),
+        HumanMessagePromptTemplate.from_template("{input}")
+    ], [None, 1.0, None], 4096)
+
+    capped_prompt = capped_chat_prompt.format(input="What is Large Language Model?", history=history.messages)
+    assert len(capped_prompt) <= 4096

@@ -3,6 +3,7 @@
 from importlib import metadata
 from typing import Optional
 
+from langchain.publisher import VectorStorePublisher
 from langchain.agents import MRKLChain, ReActChain, SelfAskWithSearchChain
 from langchain.cache import BaseCache
 from langchain.chains import (
@@ -114,4 +115,5 @@ __all__ = [
     "QAWithSourcesChain",
     "PALChain",
     "LlamaCpp",
+    "VectorStorePublisher"
 ]

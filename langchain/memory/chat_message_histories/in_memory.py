@@ -9,7 +9,6 @@ from langchain.schema import (
     HumanMessage,
 )
 
-
 class ChatMessageHistory(BaseChatMessageHistory, BaseModel):
     messages: List[BaseMessage] = []
 

@@ -415,3 +415,6 @@ class Chroma(VectorStore):
             client_settings=client_settings,
             client=client,
         )
+ 
+    def __len__(self) ->int:
+        return self._collection.count()

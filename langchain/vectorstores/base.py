@@ -307,7 +307,7 @@ class VectorStore(ABC):
 
     def as_retriever(self, **kwargs: Any) -> BaseRetriever:
         return VectorStoreRetriever(vectorstore=self, **kwargs)
-
+    
 
 class VectorStoreRetriever(BaseRetriever, BaseModel):
     vectorstore: VectorStore
