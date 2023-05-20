@@ -7,6 +7,7 @@ from langchain.memory.chat_message_histories.cosmos_db import CosmosDBChatMessag
 from langchain.memory.chat_message_histories.dynamodb import DynamoDBChatMessageHistory
 from langchain.memory.chat_message_histories.file import FileChatMessageHistory
 from langchain.memory.chat_message_histories.in_memory import ChatMessageHistory
+from langchain.memory.chat_message_histories.be_supported import BackendSupportedMessageHistory
 from langchain.memory.chat_message_histories.mongodb import MongoDBChatMessageHistory
 from langchain.memory.chat_message_histories.postgres import PostgresChatMessageHistory
 from langchain.memory.chat_message_histories.redis import RedisChatMessageHistory
@@ -22,6 +23,7 @@ from langchain.memory.simple import SimpleMemory
 from langchain.memory.summary import ConversationSummaryMemory
 from langchain.memory.summary_buffer import ConversationSummaryBufferMemory
 from langchain.memory.token_buffer import ConversationTokenBufferMemory
+from langchain.memory.retrieval_memory import RetrievalChatMemory
 from langchain.memory.vectorstore import VectorStoreRetrieverMemory
 
 __all__ = [
@@ -41,9 +43,11 @@ __all__ = [
     "ConversationTokenBufferMemory",
     "RedisChatMessageHistory",
     "DynamoDBChatMessageHistory",
+    "BackendSupportedMessageHistory",
     "PostgresChatMessageHistory",
     "VectorStoreRetrieverMemory",
     "CosmosDBChatMessageHistory",
     "FileChatMessageHistory",
     "MongoDBChatMessageHistory",
+    "RetrievalChatMemory"
 ]
